@@ -1,0 +1,14 @@
+defusedxml
+einops
+future
+imageio
+opencv-python
+prometheus-client
+prompt-toolkit
+ptyprocess
+Pygments
+scikit-image
+scikit-learn
+cairosvg
+svgwrite
+shapely
