@@ -14,3 +14,5 @@ results
 montefloor_data
 .idea
 data
+checkpoints
+s3d_floorplan_eval
