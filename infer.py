@@ -112,6 +112,10 @@ def main(dataset, ckpt_path, image_size, viz_base, save_base, infer_times):
     elif dataset == 's3d_floorplan':
         data_path = './data/s3d_floorplan'
         test_dataset = S3DFloorplanDataset(data_path, phase='test', rand_aug=False, inference=True)
+
+    elif dataset == 'residential_floorplan':
+        data_path = './data/residential_floorplan'
+        test_dataset = S3DFloorplanDataset(data_path, phase='test', rand_aug=False, inference=True)
     else:
         raise ValueError('Unknown dataset type: {}'.format(dataset))
 
@@ -212,7 +216,7 @@ def main(dataset, ckpt_path, image_size, viz_base, save_base, infer_times):
             'edges': pos_edges,
         }
 
-        if dataset == 's3d_floorplan':
+        if dataset == 's3d_floorplan' or dataset == 'residential_floorplan':
             save_filename = os.path.basename(annot_path)
             save_npy_path = os.path.join(save_base, save_filename)
             np.save(save_npy_path, pred_data)

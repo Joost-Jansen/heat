@@ -177,6 +177,12 @@ def main():
         data_path = './data/s3d_floorplan'
         train_dataset = S3DFloorplanDataset(data_path, phase='train', rand_aug=True, inference=False)
         test_dataset = S3DFloorplanDataset(data_path, phase='valid', rand_aug=False, inference=False)
+
+    elif args.exp_dataset == 'residential_floorplan':
+        data_path = './data/residential_floorplan'
+        train_dataset = S3DFloorplanDataset(data_path, phase='train', rand_aug=True, inference=False)
+        test_dataset = S3DFloorplanDataset(data_path, phase='valid', rand_aug=False, inference=False)
+
     else:
         raise ValueError('Unknown dataset: {}'.format(args.exp_dataset))
 
