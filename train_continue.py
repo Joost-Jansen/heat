@@ -215,13 +215,10 @@ def main():
 
     if args.resume:
         ckpt = torch.load(args.resume)
-        # print(ckpt['backbone'])
-        # print(ckpt['corner_model'])
-        print(ckpt.keys())
         backbone.load_state_dict(ckpt['backbone'])
         corner_model.load_state_dict(ckpt['corner_model'])
         edge_model.load_state_dict(ckpt['edge_model'])
-        # optimizer.load_state_dict(ckpt['optimizer'])
+        optimizer.load_state_dict(ckpt['optimizer'])
         lr_scheduler.load_state_dict(ckpt['lr_scheduler'])
         lr_scheduler.step_size = args.lr_drop
 
