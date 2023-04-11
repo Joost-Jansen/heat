@@ -221,7 +221,7 @@ def main():
         backbone.load_state_dict(ckpt['backbone'])
         corner_model.load_state_dict(ckpt['corner_model'])
         edge_model.load_state_dict(ckpt['edge_model'])
-        # optimizer.load_state_dict(ckpt['optimizer'])
+        optimizer.load_state_dict(ckpt['optimizer'])
         lr_scheduler.load_state_dict(ckpt['lr_scheduler'])
         lr_scheduler.step_size = args.lr_drop
 

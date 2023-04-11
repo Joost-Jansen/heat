@@ -67,7 +67,7 @@ class S3DFloorplanDataset(CornersDataset):
 
         if self.training:
             # Add some randomness for g.t. corners
-            corners += np.random.normal(0, 0, size=corners.shape)
+            corners = corners + np.random.normal(0, 0, size=corners.shape)
 
         image = skimage.img_as_float(image)
 

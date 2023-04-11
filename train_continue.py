@@ -162,6 +162,35 @@ def evaluate(image_size, backbone, corner_model, edge_model, corner_criterion, e
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
 
 
+def load_model(ckpt_path):
+    ckpt = torch.load(ckpt_path)
+    print('Load from ckpts of epoch {}'.format(ckpt['epoch']))
+    ckpt_args = ckpt['args']
+
+    backbone = ResNetBackbone()
+    strides = backbone.strides
+    num_channels = backbone.num_channels
+    backbone = nn.DataParallel(backbone)
+    backbone = backbone.cuda()
+    backbone.eval()
+    corner_model = HeatCorner(input_dim=128, hidden_dim=256, num_feature_levels=4, backbone_strides=strides,
+                              backbone_num_channels=num_channels)
+    corner_model = nn.DataParallel(corner_model)
+    corner_model = corner_model.cuda()
+    corner_model.eval()
+
+    edge_model = HeatEdge(input_dim=128, hidden_dim=256, num_feature_levels=4, backbone_strides=strides,
+                          backbone_num_channels=num_channels)
+    edge_model = nn.DataParallel(edge_model)
+    edge_model = edge_model.cuda()
+    edge_model.eval()
+
+    backbone.load_state_dict(ckpt['backbone'])
+    corner_model.load_state_dict(ckpt['corner_model'])
+    edge_model.load_state_dict(ckpt['edge_model'])
+    print('Loaded saved model from {}'.format(ckpt_path))
+    return backbone, corner_model, edge_model, ckpt_args
+
 def main():
     parser = argparse.ArgumentParser('HEAT training', parents=[get_args_parser()])
     args = parser.parse_args()
@@ -173,8 +202,8 @@ def main():
                                                inference=False)
         test_dataset = OutdoorBuildingDataset(data_path, det_path, phase='valid', image_size=image_size, rand_aug=False,
                                               inference=False)
-    elif args.exp_dataset == 's3d_floorplan':
-        data_path = './data/s3d_floorplan'
+    elif args.exp_dataset == 'RPLAN2':
+        data_path = './data/RPLAN2'
         train_dataset = S3DFloorplanDataset(data_path, phase='train', rand_aug=True, inference=False)
         test_dataset = S3DFloorplanDataset(data_path, phase='valid', rand_aug=False, inference=False)
     else:
@@ -184,22 +213,24 @@ def main():
                                   collate_fn=collate_fn, drop_last=True)
     test_dataloader = DataLoader(test_dataset, batch_size=8, shuffle=False, num_workers=args.num_workers,
                                  collate_fn=collate_fn)
+    if args.load_model:
+        backbone, corner_model, edge_model, ckpt_args = load_model(args.load_model_path)
+    else:    
+        backbone = ResNetBackbone()
+        strides = backbone.strides
+        num_channels = backbone.num_channels
 
-    backbone = ResNetBackbone()
-    strides = backbone.strides
-    num_channels = backbone.num_channels
+        corner_model = HeatCorner(input_dim=128, hidden_dim=256, num_feature_levels=4, backbone_strides=strides,
+                                backbone_num_channels=num_channels)
+        backbone = nn.DataParallel(backbone)
+        backbone = backbone.cuda()
+        corner_model = nn.DataParallel(corner_model)
+        corner_model = corner_model.cuda()
 
-    corner_model = HeatCorner(input_dim=128, hidden_dim=256, num_feature_levels=4, backbone_strides=strides,
-                              backbone_num_channels=num_channels)
-    backbone = nn.DataParallel(backbone)
-    backbone = backbone.cuda()
-    corner_model = nn.DataParallel(corner_model)
-    corner_model = corner_model.cuda()
-
-    edge_model = HeatEdge(input_dim=128, hidden_dim=256, num_feature_levels=4, backbone_strides=strides,
-                          backbone_num_channels=num_channels)
-    edge_model = nn.DataParallel(edge_model)
-    edge_model = edge_model.cuda()
+        edge_model = HeatEdge(input_dim=128, hidden_dim=256, num_feature_levels=4, backbone_strides=strides,
+                            backbone_num_channels=num_channels)
+        edge_model = nn.DataParallel(edge_model)
+        edge_model = edge_model.cuda()
 
     corner_criterion = CornerCriterion(image_size=image_size)
     edge_criterion = EdgeCriterion()
@@ -218,7 +249,7 @@ def main():
         backbone.load_state_dict(ckpt['backbone'])
         corner_model.load_state_dict(ckpt['corner_model'])
         edge_model.load_state_dict(ckpt['edge_model'])
-        optimizer.load_state_dict(ckpt['optimizer'])
+        # optimizer.load_state_dict(ckpt['optimizer'])
         lr_scheduler.load_state_dict(ckpt['lr_scheduler'])
         lr_scheduler.step_size = args.lr_drop
 
