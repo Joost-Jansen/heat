@@ -202,8 +202,8 @@ def main():
                                                inference=False)
         test_dataset = OutdoorBuildingDataset(data_path, det_path, phase='valid', image_size=image_size, rand_aug=False,
                                               inference=False)
-    elif args.exp_dataset == 'RPLAN2':
-        data_path = './data/RPLAN2'
+    elif args.exp_dataset == 'RPLAN':
+        data_path = './data/RPLAN'
         train_dataset = S3DFloorplanDataset(data_path, phase='train', rand_aug=True, inference=False)
         test_dataset = S3DFloorplanDataset(data_path, phase='valid', rand_aug=False, inference=False)
     else:
