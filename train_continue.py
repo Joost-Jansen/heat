@@ -213,24 +213,23 @@ def main():
                                   collate_fn=collate_fn, drop_last=True)
     test_dataloader = DataLoader(test_dataset, batch_size=8, shuffle=False, num_workers=args.num_workers,
                                  collate_fn=collate_fn)
-    if args.load_model:
-        backbone, corner_model, edge_model, ckpt_args = load_model(args.load_model_path)
-    else:    
-        backbone = ResNetBackbone()
-        strides = backbone.strides
-        num_channels = backbone.num_channels
+    
+ 
+    backbone = ResNetBackbone()
+    strides = backbone.strides
+    num_channels = backbone.num_channels
 
-        corner_model = HeatCorner(input_dim=128, hidden_dim=256, num_feature_levels=4, backbone_strides=strides,
+    corner_model = HeatCorner(input_dim=128, hidden_dim=256, num_feature_levels=4, backbone_strides=strides,
                                 backbone_num_channels=num_channels)
-        backbone = nn.DataParallel(backbone)
-        backbone = backbone.cuda()
-        corner_model = nn.DataParallel(corner_model)
-        corner_model = corner_model.cuda()
+    backbone = nn.DataParallel(backbone)
+    backbone = backbone.cuda()
+    corner_model = nn.DataParallel(corner_model)
+    corner_model = corner_model.cuda()
 
-        edge_model = HeatEdge(input_dim=128, hidden_dim=256, num_feature_levels=4, backbone_strides=strides,
+    edge_model = HeatEdge(input_dim=128, hidden_dim=256, num_feature_levels=4, backbone_strides=strides,
                             backbone_num_channels=num_channels)
-        edge_model = nn.DataParallel(edge_model)
-        edge_model = edge_model.cuda()
+    edge_model = nn.DataParallel(edge_model)
+    edge_model = edge_model.cuda()
 
     corner_criterion = CornerCriterion(image_size=image_size)
     edge_criterion = EdgeCriterion()
