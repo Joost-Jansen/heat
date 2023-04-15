@@ -15,4 +15,8 @@ montefloor_data
 .idea
 data
 checkpoints
-s3d_floorplan_eval
+s3d_floorplan_eval/DataRW
+s3d_floorplan_eval/Evaluator
+s3d_floorplan_eval/S3DLoader
+s3d_floorplan_eval/viz_heat
+
