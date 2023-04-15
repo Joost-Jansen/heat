@@ -112,6 +112,10 @@ def main(dataset, ckpt_path, image_size, viz_base, save_base, infer_times):
     elif dataset == 's3d_floorplan':
         data_path = './data/s3d_floorplan'
         test_dataset = S3DFloorplanDataset(data_path, phase='test', rand_aug=False, inference=True)
+        
+    elif dataset == 'RPLAN':
+        data_path = './data/RPLAN'
+        test_dataset = S3DFloorplanDataset(data_path, phase='test', rand_aug=False, inference=True)
     else:
         raise ValueError('Unknown dataset type: {}'.format(dataset))
 
