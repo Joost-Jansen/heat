@@ -213,8 +213,7 @@ def main():
                                   collate_fn=collate_fn, drop_last=True)
     test_dataloader = DataLoader(test_dataset, batch_size=8, shuffle=False, num_workers=args.num_workers,
                                  collate_fn=collate_fn)
-    
- 
+
     backbone = ResNetBackbone()
     strides = backbone.strides
     num_channels = backbone.num_channels
