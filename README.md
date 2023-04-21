@@ -110,27 +110,23 @@ We began with verifying the claimed results in the paper. The authors published 
 |**Heat (paper)**|0\.97|0\.94|0\.82|0\.83|0\.78|0\.79|
 |Heat (reproduction) rounded|0\.97|0\.97|0\.82|0\.83|0\.78|0\.79|
 |Heat (reproduction)|0\.9686691708|0\.9686691708|0\.817215959|0\.8322482128|0\.7755717631|0\.7898482399|
+
 Table 1: Quantitative original and reproduced results of the Heat model on the S3D floorplan dataset.
 
 
 # Transfer learning with RPLAN
 We aim to evaluate the capabilities of the HEAT model on a new floorplan dataset called RPLAN, which can be found [here](http://staff.ustc.edu.cn/~fuxm/projects/DeepLayout/index.html). Our goal is to use transfer learning with the pre-trained HEAT model to test its generalization performance on the new RPLAN dataset. Through this experiment, we hope to gain insights into the HEAT model's capabilities and its suitability for floorplan recognition and related tasks.
 
-## Data preparation
+## Data preparation<img style="float: right;" src="images_readme/house.png">
 In order to quantitatively test HEAT on the new RPLAN dataset, we have transformed the labels of the dataset to the format they use in the paper. The label format that the paper uses can be seen in label\_house. This is a dictionary of points, each with an array of points that it connects to. As we can see point 1 is connected to points 2 and 3. The result can be seen in the image below.
 
-label\_house = {<img style="float: right;" src="images_readme/house.png">
+label\_house = {
 
-`    `(127, 20): [(20, 120), (234, 120)],
-
-`    `(20, 120): [(127, 20), (234, 120), (20, 240)],
-
-`    `(234, 120): [(127, 20), (20, 120), (234, 240)],
-
-`    `(20, 240): [(20, 120), (234, 240)],
-
-`    `(234, 240): [(234, 120), (20, 240)],
-
+    (127, 20): [(20, 120), (234, 120)],
+    (20, 120): [(127, 20), (234, 120), (20, 240)],
+    (234, 120): [(127, 20), (20, 120), (234, 240)],
+    (20, 240): [(20, 120), (234, 240)],
+    (234, 240): [(234, 120), (20, 240)],
 }
 
 
@@ -190,6 +186,7 @@ In order to further examine the Heat model's performance, we fine-tuned the exis
 ||*Precision*|*recall*||
 |Heat|0\.489|0\.308||
 |Heat Fine-tuned|0\.998|0\.663||
+
 **Table 2 Results of Heat model and fine tuned model on RPLAN dataset**
 
 Upon analyzing the results, it is apparent that the model has significant potential for improvement. The fine-tuned model displays notably superior precision results; however, its recall scores are still quite low. This is in contrast to the original S3D floorplan dataset, in which the Heat model achieved recall percentages in the 90% range. Therefore, we conclude that while the fine-tuned model makes accurate border predictions, it still misses numerous borders in its predictions. Limitations to these results in recall could be due to a number of different reasons to which due to time constraints we won’t go in depth. A number of reasons for the low recall could be due to the low epoch number for fine-tuning, different data distribution and a bigger data set. 
@@ -221,8 +218,8 @@ Both versions of HEAT perform poorly on the instance at the bottom of figure 3. 
 
 **Figure 3: The qualitative results where the left images are the ground truths, the outputs of the original HEAT are in the middle and the right images display the outputs of the fine-tuned HEAT.**
 
-# Discussion 
 # Conclusion
+In conclusion, our analysis of the HEAT model's performance using the RPLAN dataset has provided valuable insights into the model's strengths and limitations. The fine-tuned model shows improved precision results, but its recall scores are still quite low compared to the original S3D floorplan dataset. Despite this limitation, the qualitative results provide a better understanding of the HEAT model's behavior and its ability to adapt to different floorplan annotations. Our findings suggest that further improvements could be made with a larger training dataset and longer fine-tuning epochs. Overall, this study demonstrates the potential of transfer learning and highlights the importance of testing machine learning models with different datasets to better understand their capabilities.
 
 # References
 Heat Paper:
