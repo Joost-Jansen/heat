@@ -13,7 +13,7 @@ The source code available for this blog post is a slight adaptation of [HEAT](ht
 
 ## Introduction
 
-In recent years, attention-based neural nets (NN) have shown success in a broad range of computer vision tasks. One of the methods that try to solve a specific problem in the field of structured reconstruction is Holistic Edge Attention Transformer ([HEAT](https://openaccess.thecvf.com/content/CVPR2022/html/Chen_HEAT_Holistic_Edge_Attention_Transformer_for_Structured_Reconstruction_CVPR_2022_paper.html)). The method aims to reconstruct  structures found in 2D rastered images (eg. floorplans) and does this by constructing a planar graph that represents the underlying geometric structure of the input image. In this blog post, we aim to explain and evaluate HEAT by Chen, Qian, and Furukawa. We will do this by replicating the experiments on two validation sets as mentioned in the paper. Additionally, we will use the model obtained by the paper and add training data from a new data source to further assess the performance of the method and compare it to the results found. By doing so we aim to critically analyze the ability to reproduce the results of the paper and report on the generalizability to new datasets. 
+In recent years, Transformer Neural Networks have shown success in a broad range of computer vision tasks. One of the methods that try to solve a specific problem in the field of structured reconstruction is Holistic Edge Attention Transformer ([HEAT](https://openaccess.thecvf.com/content/CVPR2022/html/Chen_HEAT_Holistic_Edge_Attention_Transformer_for_Structured_Reconstruction_CVPR_2022_paper.html)). The method aims to extract geometric structure from images (eg. floorplans) and does this by constructing a planar graph that represents the underlying geometric structure of the input image. In this blog post, we aim to explain and evaluate HEAT by Chen, Qian, and Furukawa. We will do this by replicating the experiments on two validation sets as mentioned in the paper. By doing so we aim to critically analyze the ability to reproduce the results of the paper and report on the generalizability to new datasets. Additionally, we will use the pre-trained model from their repository and fine-tune it by adding new training data from a data source containing real floorplans without density maps (different type of floorplan data) to further assess the performance of the method and compare it to the results found. 
 
 ## HEAT explained
 To further illustrate how HEAT works we will shortly describe the four major steps that the method takes. HEAT first identifies corners, or equivalently points where two edges intersect, in a 2D image by using any corner detector. For the best performance a variant of HEAT’s edge detection architecture, which we will talk about in a bit, is used on pixels as corner candidates. Instances of corners used in this blog will be corners of a building or intersections between walls in a floorplan. 
@@ -43,7 +43,6 @@ Head over to the Microsoft Visual Studio site and [download](https://visualstudi
 Open a Conda prompt as an administrator and create a new environment for HEAT and activate the environment using the following commands:
 ```
 conda create -n heat
-
 conda activate heat
 ```
 **Step 4:** Setup project folder
@@ -51,7 +50,7 @@ conda activate heat
 Move to your preferred project folder where you want to install HEAT by using cd. The root folder should have a data, Deformable\_DETR, and heat folder. An example of the folder structure looks like this:
 ```
 my_heat_project
-  |____ Deformable\_DETR   # Folder for DETR dependency
+  |____ Deformable\_DETR  # Folder for DETR dependency
   |____ heat              # Your heat project from github
     |____ data           	# Put your data here   
     |____ checkpoints     # Put predefined checkpoints here
@@ -124,18 +123,20 @@ Table 1: Quantitative original and reproduced results of the Heat model on the S
 # Transfer learning with RPLAN dataset
 We aim to evaluate the capabilities of the HEAT model on a new floorplan dataset called RPLAN, which can be found [here](http://staff.ustc.edu.cn/~fuxm/projects/DeepLayout/index.html). Our goal is to use transfer learning with the pre-trained HEAT model to test its generalization performance on the new RPLAN dataset. Through this experiment, we hope to gain insights into the HEAT model's capabilities and its suitability for floorplan recognition and related tasks.
 
-## Data preparation<img style="float: right;" src="images_readme/house.png">
+## Data preparation
 In order to quantitatively test HEAT on the new RPLAN dataset, we have transformed the labels of the dataset to the format they use in the paper. The label format that the paper uses can be seen in label\_house. This is a dictionary of points, each with an array of points that it connects to. As we can see point 1 is connected to points 2 and 3. The result can be seen in the image below.
 
-label\_house = {
+<img src="images_readme/house.png">
 
+```
+label_house = {
     (127, 20): [(20, 120), (234, 120)],
     (20, 120): [(127, 20), (234, 120), (20, 240)],
     (234, 120): [(127, 20), (20, 120), (234, 240)],
     (20, 240): [(20, 120), (234, 240)],
     (234, 240): [(234, 120), (20, 240)],
 }
-
+```
 
 The dataset RPLAN has a list of polygons, each with its respective coordinates (= corners). So what we need to do is loop over all the polygons and map the polygons in the image to a list of coordinates. For each coordinate, we create a dictionary and add the coordinates of the current polygon to the dictionary that either have the same x or y value just as in the label\_house. Notice that since we loop over multiple polygons these coordinates will now have the connected corners from all shapes in the image. In the pseudocode below the process of transforming the data can be found. 
 ```
