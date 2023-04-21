@@ -1,6 +1,7 @@
 ﻿
 # Reproduction of HEAT: Holistic Edge Attention Transformer for Structured Reconstruction
 ## Student credentials
+This blog post is made by students of the TU Delft as part of the course Deep Learning. The students are:
 
 Jeroen Hofland, 4678141, <j.l.hofland@student.tudelft.nl>
 
@@ -8,14 +9,19 @@ Jochem van Lith, ???, ???
 
 Joost Jansen, 4807179, [j.j.jansen-2@student.tudelft.nl](mailto:j.j.jansen-1@student.tudelft.nl)
 
+The source code available for this blog post is a slight adaptation of [HEAT](https://github.com/woodfrog/heat).
 
-# Introduction
+## Introduction
 
-In recent years, attention-based neural nets (NN) have shown success in a broad range of computer vision tasks. One of the methods that try to solve a specific problem in the field of structured reconstruction is Holistic Edge Attention Transformer (HEAT). The method aims to reconstruct  structures found in 2D rastered images (eg. floorplans) and does this by constructing a planar graph that represents the underlying geometric structure of the input image. In this blog post, we aim to explain and evaluate HEAT by Chen, Qian, and Furukawa. We will do this by replicating the experiments on two validation sets as mentioned in the paper. Additionally, we will use the model obtained by the paper and add training data from a new data source to further assess the performance of the method and compare it to the results found. By doing so we aim to critically analyze the ability to reproduce the results of the paper and report on the generalizability to new datasets. 
+In recent years, attention-based neural nets (NN) have shown success in a broad range of computer vision tasks. One of the methods that try to solve a specific problem in the field of structured reconstruction is Holistic Edge Attention Transformer ([HEAT](https://openaccess.thecvf.com/content/CVPR2022/html/Chen_HEAT_Holistic_Edge_Attention_Transformer_for_Structured_Reconstruction_CVPR_2022_paper.html)). The method aims to reconstruct  structures found in 2D rastered images (eg. floorplans) and does this by constructing a planar graph that represents the underlying geometric structure of the input image. In this blog post, we aim to explain and evaluate HEAT by Chen, Qian, and Furukawa. We will do this by replicating the experiments on two validation sets as mentioned in the paper. Additionally, we will use the model obtained by the paper and add training data from a new data source to further assess the performance of the method and compare it to the results found. By doing so we aim to critically analyze the ability to reproduce the results of the paper and report on the generalizability to new datasets. 
 
-To further illustrate how HEAT works we will shortly describe the four major steps that the method takes. HEAT first identifies corners, or equivalently points where two edges intersect, in a 2D image by using any corner detector [source]. For the best performance a variant of HEAT’s edge detection architecture, which we will talk about in a bit, is used on pixels as corner candidates. Instances of corners used in this blog will be corners of a building or intersections between walls in a floorplan. 
+## HEAT explained
+To further illustrate how HEAT works we will shortly describe the four major steps that the method takes. HEAT first identifies corners, or equivalently points where two edges intersect, in a 2D image by using any corner detector. For the best performance a variant of HEAT’s edge detection architecture, which we will talk about in a bit, is used on pixels as corner candidates. Instances of corners used in this blog will be corners of a building or intersections between walls in a floorplan. 
 
 Each pair of corners now becomes an edge candidate and a Transformer node. The coordinates of the endpoints of each edge are initialized as a trigonometric (read: relative) positional encoding [source]. By doing so the model can learn how the edges are positioned in relation to each other and the overall image. Now that we have a set of candidate edges, HEAT fuses image features to each candidate using adaptive deformable attention. This allows the model to focus on the important regions of the image. 
+
+![](images_readme/pipeline.png)
+**Figure 1: Pipeline of HEAT architecture**
 
 HEAT also uses an Image-aware or Geometry-only weight-sharing Transformer decoder to learn holistic structural patterns over the graph edge candidates. The Image-aware decoder takes into account both the geometric structure of the edges in the image as well as the image features. The Geometry-only decoder only focuses on the first part of finding geometric structures without the use of image features. For geometric features, one must think of position, angles, and edge length. By using both these encoders HEAT can analyze the influence of the performance of having only geometrical data available. 
 
@@ -99,7 +105,7 @@ This should not return any error, indicating that HEAT is successfully installed
 
 
 
-# Reproduction Results
+## Reproduction Results
 
 We began with verifying the claimed results in the paper. The authors published the checkpoints acquired during training, which we used to infer the geometric structures of the S3D floorplan dataset. We verified that all the claimed results on this particular test set are valid for the quantitative results as is visible in Table 1.
 
@@ -114,7 +120,7 @@ We began with verifying the claimed results in the paper. The authors published 
 Table 1: Quantitative original and reproduced results of the Heat model on the S3D floorplan dataset.
 
 
-# Transfer learning with RPLAN
+# Transfer learning with RPLAN dataset
 We aim to evaluate the capabilities of the HEAT model on a new floorplan dataset called RPLAN, which can be found [here](http://staff.ustc.edu.cn/~fuxm/projects/DeepLayout/index.html). Our goal is to use transfer learning with the pre-trained HEAT model to test its generalization performance on the new RPLAN dataset. Through this experiment, we hope to gain insights into the HEAT model's capabilities and its suitability for floorplan recognition and related tasks.
 
 ## Data preparation<img style="float: right;" src="images_readme/house.png">
@@ -154,13 +160,13 @@ Note, in figure 1, how the walls are different between the two datasets. RPLAN o
 
 ![](images_readme/image_rewriting.png)
 
-**Figure 1: A normal and density pair from the S3D dataset (left) next to the construction of an S3D-like normal and density pair (middle) from an RPLAN floorplan (right).**
+**Figure 2: A normal and density pair from the S3D dataset (left) next to the construction of an S3D-like normal and density pair (middle) from an RPLAN floorplan (right).**
 
 Another important difference between the datasets is the way of annotation. In S3D the walls are annotated by a single edge, whereas in RPLAN every wall has an edge on both sides with the width of the wall as a margin. See figure 2 for a visualization of this. HEAT was trained using the annotations by S3D, hence without fine-tuning it will probably split rooms using a single edge. The output could then still be the right geometry, but when computing the error with RPLAN’s ground truth it will likely be penalized for this. This issue will be addressed in more detail in the qualitative results section.
 
 ![](images_readme/different_ground_truths.png)
 
-**Figure 2: Two different ground truths (for different floorplans) by S3D (left) and RPLAN (right).**
+**Figure 3: Two different ground truths (for different floorplans) by S3D (left) and RPLAN (right).**
 
 
 
@@ -216,7 +222,7 @@ Both versions of HEAT perform poorly on the instance at the bottom of figure 3. 
 
 ![](images_readme/qualitative_results4.png)
 
-**Figure 3: The qualitative results where the left images are the ground truths, the outputs of the original HEAT are in the middle and the right images display the outputs of the fine-tuned HEAT.**
+**Figure 4: The qualitative results where the left images are the ground truths, the outputs of the original HEAT are in the middle and the right images display the outputs of the fine-tuned HEAT.**
 
 # Conclusion
 In conclusion, our analysis of the HEAT model's performance using the RPLAN dataset has provided valuable insights into the model's strengths and limitations. The fine-tuned model shows improved precision results, but its recall scores are still quite low compared to the original S3D floorplan dataset. Despite this limitation, the qualitative results provide a better understanding of the HEAT model's behavior and its ability to adapt to different floorplan annotations. Our findings suggest that further improvements could be made with a larger training dataset and longer fine-tuning epochs. Overall, this study demonstrates the potential of transfer learning and highlights the importance of testing machine learning models with different datasets to better understand their capabilities.
@@ -233,6 +239,8 @@ Heat Paper:
     pages     = {3866-3875}
 }
 ```	
+
+
 Dataset RPLAN:
 ```
 @article {Wu_DeepLayout_2019,
