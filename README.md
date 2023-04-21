@@ -5,7 +5,7 @@ This blog post is made by students of the TU Delft as part of the course Deep Le
 
 Jeroen Hofland, 4678141, <j.l.hofland@student.tudelft.nl>
 
-Jochem van Lith, ???, ???
+Jochem van Lith, 4917634, <j.a.e.vanlith@student.tudelft.nl>
 
 Joost Jansen, 4807179, [j.j.jansen-2@student.tudelft.nl](mailto:j.j.jansen-1@student.tudelft.nl)
 
@@ -156,13 +156,13 @@ The RPLAN dataset we use consists of 45252 images, this is already filtered sinc
 
 A floorplan in RPLAN is fairly different from a floorplan in the S3D dataset on which the original HEAT model was trained. An RPLAN floorplan is a single image, whereas in S3D every floorplan is represented by two images: a normal and a density. Furthermore, the colors of the floorplans are very different. Therefore, to give HEAT a fair chance without additional training, we adapted the RPLAN data to look similar to the S3D data. Figure 1 shows how we converted an RPLAN sample into a density and normal with similar pixel values as the S3D dataset.
 
-Note, in figure 1, how the walls are different between the two datasets. RPLAN only defines its inside walls and its outside walls are simply the image’s circumference. S3D, on the other hand, makes no distinction between inside and outside walls: they are all assigned approximately the same color.
+Note, in figure 2, how the walls are different between the two datasets. RPLAN only defines its inside walls and its outside walls are simply the image’s circumference. S3D, on the other hand, makes no distinction between inside and outside walls: they are all assigned approximately the same color.
 
 ![](images_readme/image_rewriting.png)
 
 **Figure 2: A normal and density pair from the S3D dataset (left) next to the construction of an S3D-like normal and density pair (middle) from an RPLAN floorplan (right).**
 
-Another important difference between the datasets is the way of annotation. In S3D the walls are annotated by a single edge, whereas in RPLAN every wall has an edge on both sides with the width of the wall as a margin. See figure 2 for a visualization of this. HEAT was trained using the annotations by S3D, hence without fine-tuning it will probably split rooms using a single edge. The output could then still be the right geometry, but when computing the error with RPLAN’s ground truth it will likely be penalized for this. This issue will be addressed in more detail in the qualitative results section.
+Another important difference between the datasets is the way of annotation. In S3D the walls are annotated by a single edge, whereas in RPLAN every wall has an edge on both sides with the width of the wall as a margin. See figure 3 for a visualization of this. HEAT was trained using the annotations by S3D, hence without fine-tuning it will probably split rooms using a single edge. The output could then still be the right geometry, but when computing the error with RPLAN’s ground truth it will likely be penalized for this. This issue will be addressed in more detail in the qualitative results section.
 
 ![](images_readme/different_ground_truths.png)
 
@@ -200,15 +200,15 @@ Upon analyzing the results, it is apparent that the model has significant potent
 
 ## Qualitative results
 
-Besides the bold numbers, we are also interested in qualitative results as these could give us a better understanding of HEAT’s behavior. We picked several floorplans which showed interesting results. These are displayed in figure 3.
+Besides the bold numbers, we are also interested in qualitative results as these could give us a better understanding of HEAT’s behavior. We picked several floorplans which showed interesting results. These are displayed in figure 4.
 
-The floorplan at the top of figure 3 is an example where the fine-tuned HEAT performs better than the original one. Even though the original HEAT correctly identifies the majority of the rooms, it still misses the large one in the middle. After fine-tuning it is able to predict the geometry perfectly. Also note how the fine-tuned model has margins between the rooms. These correspond to the different ground truth annotations of the S3D and RPLAN datasets, mentioned before in the data preprocessing section. Apparently, fine-tuning helped HEAT to ‘understand’ this difference in annotations.
+The floorplan at the top of figure 4 is an example where the fine-tuned HEAT performs better than the original one. Even though the original HEAT correctly identifies the majority of the rooms, it still misses the large one in the middle. After fine-tuning it is able to predict the geometry perfectly. Also note how the fine-tuned model has margins between the rooms. These correspond to the different ground truth annotations of the S3D and RPLAN datasets, mentioned before in the data preprocessing section. Apparently, fine-tuning helped HEAT to ‘understand’ this difference in annotations.
 
-The outputs of the second floorplan in figure 3 are nice visualizations of the difference in flexibility between the two models. The original model was trained on floorplans in which edges were less sharply defined; the bottom left image in figure 1 shows how the red color saturates towards the edges. The fine-tuned model, however, was trained on floorplans in which edges were very sharp. On the second floorplan (figure 3), the original HEAT tends to fit the walls slightly outside of the red surface, whereas after fine-tuning it strictly stays inside the residence and eagerly predicts (too) many edges.
+The outputs of the second floorplan in figure 4 are nice visualizations of the difference in flexibility between the two models. The original model was trained on floorplans in which edges were less sharply defined; the bottom left image in figure 2 shows how the red color saturates towards the edges. The fine-tuned model, however, was trained on floorplans in which edges were very sharp. On the second floorplan (figure 4), the original HEAT tends to fit the walls slightly outside of the red surface, whereas after fine-tuning it strictly stays inside the residence and eagerly predicts (too) many edges.
 
-The third floorplan in figure 3 shows an instance where performance of the original and fine-tuned HEAT is more or less equal. Note again how the model learned the different annotations in RPLAN during fine-tuning; there are margins between the rooms.
+The third floorplan in figure 4 shows an instance where performance of the original and fine-tuned HEAT is more or less equal. Note again how the model learned the different annotations in RPLAN during fine-tuning; there are margins between the rooms.
 
-Both versions of HEAT perform poorly on the instance at the bottom of figure 3. Especially the outside walls are not recognized. As discussed in the data preprocessing section, the outside walls in the S3D dataset are explicitly colored, whereas in RPLAN they are defined by the circumference of the image. The original model fails to predict most of the outside walls correctly. Fine-tuning clearly helped, but outside-wall-recognition is still not perfect. More training data could possibly resolve this problem.
+Both versions of HEAT perform poorly on the instance at the bottom of figure 4. Especially the outside walls are not recognized. As discussed in the data preprocessing section, the outside walls in the S3D dataset are explicitly colored, whereas in RPLAN they are defined by the circumference of the image. The original model fails to predict most of the outside walls correctly. Fine-tuning clearly helped, but outside-wall-recognition is still not perfect. More training data could possibly resolve this problem.
 
 
 |**Ground Truth**|**Original HEAT**|**Fine-tuned HEAT**|
