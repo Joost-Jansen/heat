@@ -11,8 +11,8 @@ from planar_graph_utils import get_regions_from_pg, plot_floorplan_with_regions
 #     (234, 240): [(234, 120), (20, 240)],
 # }
 
-pg_base = '../results/npy_heat_s3d_256/'
-viz_base = './viz_heat'
+pg_base = './../drive/MyDrive/heat/results/npy_RPLAN_256/'
+viz_base = './../drive/MyDrive/heat/results/viz_heat/'
 if not os.path.exists(viz_base):
     os.makedirs(viz_base)
 

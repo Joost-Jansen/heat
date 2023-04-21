@@ -1,170 +1,257 @@
-# HEAT: Holistic Edge Attention Transformer for Structured Reconstruction 
+﻿**HEAT: Holistic Edge Attention Transformer for Structured Reconstruction**
 
-<img src="https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=PyTorch&logoColor=white" width="9%" /> [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) 
+**Student credentials**
 
-Official implementation of the paper [HEAT: Holistic Edge Attention Transformer for Structured Reconstruction](https://arxiv.org/abs/2111.15143) (**CVPR 2022**).
+Jeroen Hofland, 4678141, <j.l.hofland@student.tudelft.nl>
 
-[[Project page]](https://heat-structured-reconstruction.github.io/), [[Arxiv]](https://arxiv.org/abs/2111.15143)
+Jochem van Lith, ???, ???
 
-Please use the following bib entry to cite the paper if you are using resources from this repo.
+Joost Jansen, 4807179, [j.j.jansen-2@student.tudelft.nl](mailto:j.j.jansen-1@student.tudelft.nl)
+
+
+# HEAT: Holistic Edge Attention Transformer for Structured Reconstruction
+
+In recent years, attention-based neural nets (NN) have shown success in a broad range of computer vision tasks. One of the methods that try to solve a specific problem in the field of structured reconstruction is Holistic Edge Attention Transformer (HEAT). The method aims to reconstruct  structures found in 2D rastered images (eg. floorplans) and does this by constructing a planar graph that represents the underlying geometric structure of the input image. In this blog post, we aim to explain and evaluate HEAT by Chen, Qian, and Furukawa. We will do this by replicating the experiments on two validation sets as mentioned in the paper. Additionally, we will use the model obtained by the paper and add training data from a new data source to further assess the performance of the method and compare it to the results found. By doing so we aim to critically analyze the ability to reproduce the results of the paper and report on the generalizability to new datasets. 
+
+To further illustrate how HEAT works we will shortly describe the four major steps that the method takes. HEAT first identifies corners, or equivalently points where two edges intersect, in a 2D image by using any corner detector [source]. For the best performance a variant of HEAT’s edge detection architecture, which we will talk about in a bit, is used on pixels as corner candidates. Instances of corners used in this blog will be corners of a building or intersections between walls in a floorplan. 
+
+Each pair of corners now becomes an edge candidate and a Transformer node. The coordinates of the endpoints of each edge are initialized as a trigonometric (read: relative) positional encoding [source]. By doing so the model can learn how the edges are positioned in relation to each other and the overall image. Now that we have a set of candidate edges, HEAT fuses image features to each candidate using adaptive deformable attention. This allows the model to focus on the important regions of the image. 
+
+HEAT also uses an Image-aware or Geometry-only weight-sharing Transformer decoder to learn holistic structural patterns over the graph edge candidates. The Image-aware decoder takes into account both the geometric structure of the edges in the image as well as the image features. The Geometry-only decoder only focuses on the first part of finding geometric structures without the use of image features. For geometric features, one must think of position, angles, and edge length. By using both these encoders HEAT can analyze the influence of the performance of having only geometrical data available. 
+
+During training, HEAT employs a masked learning strategy. This means that part of the input data are hidden or equivalently masked from the model during the training. This forces the model to learn from the visible parts and aims to improve the generalizability over unseen or noisy data. 
+
+## Installation guide
+
+**Step 1:** Install NVIDIA CUDA
+
+Download the CUDA installer for your operating system and architecture. The download can be found [at this link](https://developer.nvidia.com/cuda-11-7-0-download-archive?target_os=Windows&target_arch=x86_64). For this reproduction, the Windows operating system was used with a x86\_64 architecture. In the installer choose the “Network” option and follow the instructions to complete the installation. 
+
+**Step 2:** Install Microsoft Visual C++
+
+Head over to the Microsoft Visual Studio site and [download](https://visualstudio.microsoft.com/visual-cpp-build-tools/) and install Visual C++ Build Tools. During the installation be sure to check the “Desktop development with C++” option. 
+
+**Step 3:** Set up the Conda environment
+
+Open a Conda prompt as an administrator and create a new environment for HEAT and activate the environment using the following commands:
+```
+conda create -n heat
+
+conda activate heat
+```
+**Step 4:** Setup project folder
+
+Move to your preferred project folder where you want to install HEAT by using cd. The root folder should have a data, Deformable\_DETR, and heat folder. An example of the folder structure looks like this:
+```
+my_heat_project
+  |____ Deformable\_DETR   # Folder for DETR dependency
+  |____ heat              # Your heat project from github
+    |____ data           	# Put your data here   
+    |____ checkpoints     # Put predefined checkpoints here
 
 ```
-@inproceedings{chen2022heat,
-     title={HEAT: Holistic Edge Attention Transformer for Structured Reconstruction},
-     author={Chen, Jiacheng and Qian, Yiming and Furukawa, Yasutaka},
-     booktitle={IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
-     year={2022}
-} 
+**Step 5:** Set up dependencies
+
+Now that we have made an environment for our project we can install the dependencies. Be sure to head to the preferred directory where you want to install HEAT by using cd. For the dependencies, we will use different versions than those provided by the HEAT GitHub. We install them using:
+
+conda install pytorch==1.13.1 torchvision==0.14.1 torchaudio==0.13.1 pytorch-cuda=11.7 -c pytorch -c nvidia
+
+(Optional) We can now test if CUDA was correctly installed by running. This will return 11.7 and true if everything is configured correctly.
+```
+python
+
+\>>> import torch
+
+\>>> print(torch.version.cuda)
+
+\>>> torch.cuda.is\_available()
+
+\>>> quit()
 ```
 
-## Introduction
+**Step 6:** Install requirements for Deformable-DETR
 
-<img src="assets/img/problem_description.png" width="90%">
-
-This paper focuses on a typical family of structured reconstruction tasks: planar graph reconstruction. Two different tasks are included: 1) outdoor architecture reconstruction from a satellite image; or 2) floorplan reconstruction from a point density image. The above below shows examples. The key contributions of the paper are:
-
-- a transformer-based architecture w/ state-of-the-art performance and efficiency on two different tasks, w/o domain specific heuristics
-- a geometry-only decoder branch w/ a masked training strategy to enhance the geometry learning
-
-
-<img src="assets/img/pipeline.png" width="90%">
-
-As shown by the above figure, the overall pipeline of our method consists of three key steps: 1) edge node initialization; 2) edge image feature fusion and edge filtering; and 3) holistic structural reasoning with two weight-sharing transformer decoders. Please refer to the paper for more details.
-
-
-This repo provides the code, data, and pre-trained checkpoints of HEAT for the two tasks covered in the paper.
-
-
-## Preparation
-
-**Note: The code, data, and pre-trained models in this repo are for non-commercial research purposes only, please check the LICENSE file for details.**
-
-### Environment
-
-This repo was developed and tested with ```Python3.7```
-
-Install the required packages, and compile the deformable-attention modules (from [deformable-DETR](https://github.com/fundamentalvision/Deformable-DETR))
-
+We will now install the requirements for Deformable-DETR using the following commands. 
 ```
-pip install -r requirements.txt
-cd  models/ops/
-sh make.sh
-cd ...
+pip install pycocotools
+
+pip install tqdm
+
+pip install cython
+
+pip install scipy
 ```
-
-### Data
-
-Please download the data for the two tasks from the [link](https://drive.google.com/file/d/1BL58xl2U8H96YBkkB7WjDmtznuEj6PbG/view?usp=sharing) here.  Extract the data into the ```./data``` directory.
-
-The file structure should be like the following:
+Perform an extra step to install the Deformable attention module by changing the directory (cd) to "Deformable-DETR/models/ops" and running the following commands. After the setup was completed head back to the root folder of your project. 
 ```
-data
-├── outdoor
-│   ├── cities_dataset  # the outdoor architecture dataset from previous works
-│   │      ├── annot    # the G.T. planar graphs
-│   │      ├── rgb      # the input images
-│   │      ├── ......   # dataset splits, miscs
-│   │
-│   └── det_finals   # corner detection results from previous works (not used by our full method, but used for ablation studies) 
-│
-└── s3d_floorplan       # the Structured3D floorplan dataset, produced with the scripts from MonteFloor
-    ├── annot           # the G.T. planar graphs 
-    │
-    ├── density         # the point density images
-    │
-    │── ......          # dataset splits, miscs
+python setup.py build install
 ```
-Note that the Structured3D floorplan data is generated with the scripts provided by MonteFloor[1]. We thank the authors for kindly sharing the processing scripts, please cite their paper if you use the corresponding resources. 
+**Step 7:** Installing the requirements for HEAT
 
-#### Data preprocessing for floorplan reconstruction (Optional)
-
-All the data used in our paper are provided in the download links above. However, If you are interested in the data preparation process for the floorplan reconstruction task, please refer to the [```s3d_preprocess```](https://github.com/woodfrog/heat/tree/master/s3d_preprocess) directory in which we provide the scripts and a brief doc. 
-
-### Checkpoints
-
-We provide the checkpoints for our full method under [this link](https://drive.google.com/file/d/1Oua4RCaxOIm7-mWXoUJZHTNE3oSPrDTw/view?usp=sharing), please download and extract.
-
-
-## Inference, evaluation, and visualization
-
-We provide the instructions to run the inference, quantitative evaluation, and qualitative visualization in this section.
-
-### Outdoor architecture reconstruction
-
-- **Inference.** Run the inference with the pre-trained checkpoints, with image size 256:
-
-    ```
-    python infer.py --checkpoint_path ./checkpoints/ckpts_heat_outdoor_256/checkpoint.pth  --dataset outdoor --image_size 256 --viz_base ./results/viz_heat_outdoor_256 --save_base ./results/npy_heat_outdoor_256
-    ```
-
-    or with image size 512:
-
-    ```
-    python infer.py --checkpoint_path ./checkpoints/ckpts_heat_outdoor_512/checkpoint.pth  --dataset outdoor --image_size 512 --viz_base ./results/viz_heat_outdoor_512 --save_base ./results/npy_heat_outdoor_512
-    ```
-
-- **Quantitative evaluation.** The quantitative evaluation for this dataset is included in the inference script. The metric implementations (in ```./metrics```) are borrowed from [Explore-classify[2]](https://zhangfuyang.github.io/expcls/).  
-
-- **Qualitative evaluation.** To get the qualitative visualizations used in our paper, set the paths properly in ```./qualitative_outdoor/visualize_npy.py```, and then run:
-
-    ```
-    cd qualitative_outdoor
-    python visualize_npy.py
-    cd ..
-    ```
-
-### Floorplan reconstruction
-
-- **Inference.** Run the inference with the pre-trained checkpoints:
-
-    ```
-    python infer.py --checkpoint_path ./checkpoints/ckpts_heat_s3d_256/checkpoint.pth  --dataset s3d_floorplan --image_size 256 --viz_base ./results/viz_heat_s3d_256 --save_base ./results/npy_heat_s3d_256 
-    ```
-
-- **Quantitative evaluation.** The quantitative evaluation is again adapted from the code of MonteFloor[1], we thank the authors for sharing the evaluation code. Please first download the data used by MonteFloor with [this link](https://drive.google.com/file/d/1XpKm3vjvw4lOw32pX81w0U0YL_PBuzez/view?usp=sharing) (required by evaluation code) and extract it as ```./s3d_floorplan_eval/montefloor_data```. Then run the evaluation by:
-    ```
-    cd s3_floorplan_eval
-    python evaluate_solution.py --dataset_path ./montefloor_data --dataset_type s3d --scene_id val
-    cd ..
-    ```
-  Note that we augment the original evaluation code with an algorithm for extracting valid planar graph from our outputs (implemented in ```/s3d_floorplan_eval/planar_graph_utils.py```). Invalid structures including crossing edges or unclosed loops are discarded. The same algorithm is also applied to all our baseline approaches.
-
-- **Qualitative evaluation.** To generate the qualitative visualization results used in the paper, set the paths properly in ```./s3d_floorplan_eval/visualize_npy.py```, and then run:
-  ```
-  cd s3d_floorplan_eval
-  python visualize_npy.py
-  cd ..
-  ```
-  Note that the incomplete regions are discarded before the quantitative evaluation. The quantitative metrics from MonteFloor[1] are room-based, and incomplete regions are simply treated as missing rooms. For qualitative visualization, we plot all predicted corners and edges, but only complete (i.e., valid) regions are colored. 
-
-
-
-## Training
-
-Set up the training arguments in ```arguments.py```, and then run the training by:
-
+After you have successfully installed Deformable-DETR, we only have to install HEAT itself. Make sure you are in the root directory of your project and run:
 ```
-CUDA_VISIBLE_DEVICES={gpu_ids} python train.py
+pip install -r heat/requirements.txt
 ```
+**Step 8:** Install HEAT and verify the installation
 
-Or specify the key arguments in the command line and run the outdoor experiment by:
-
+After all the dependencies are installed we can now install HEAT itself. We do this by running:
 ```
-CUDA_VISIBLE_DEVICES={gpu_ids} python train.py  --exp_dataset outdoor  --epochs 800 --lr_drop 600  --batch_size 16  --output_dir ./checkpoints/ckpts_heat_outdoor_256  --image_size 256  --max_corner_num 150  --lambda_corner 0.05  --run_validation
+pip install heat/models/ops
 ```
-
-or run the s3d floorplan experiment by:
-
+After HEAT is installed we can verify that everything works by opening Python in the Conda terminal and running the following command:
 ```
-CUDA_VISIBLE_DEVICES={gpu_ids} python train.py  --exp_dataset s3d_floorplan  --epochs 400 --lr_drop 300  --batch_size 16  --output_dir ./checkpoints/ckpts_heat_s3d_256  --image_size 256  --max_corner_num 200  --lambda_corner 0.10  --run_validation
+python
+
+\>>> import heat
 ```
-
-With the default setting (e.g., model setup, batch size, etc.), training the full HEAT (i.e., the end-to-end corner and edge modules) needs at least 2 GPUs with ~16GB memory each. 
-
+This should not return any error, indicating that HEAT is successfully installed! We also have 
 
 
-## References
 
-[1]. Stekovic, Sinisa, Mahdi Rad, Friedrich Fraundorfer and Vincent Lepetit. “MonteFloor: Extending MCTS for Reconstructing Accurate Large-Scale Floor Plans.” 2021 IEEE/CVF International Conference on Computer Vision (ICCV) (2021): 16014-16023.
+# Reproduction Results
 
-[2]. Zhang, Fuyang, Xiangyu Xu, Nelson Nauata and Yasutaka Furukawa. “Structured Outdoor Architecture Reconstruction by Exploration and Classification.” 2021 IEEE/CVF International Conference on Computer Vision (ICCV) (2021): 12407-12415. 
+We began with verifying the claimed results in the paper. The authors published the checkpoints acquired during training, which we used to infer the geometric structures of the S3D floorplan dataset. We verified that all the claimed results on this particular test set are valid for the quantitative results as is visible in Table 1.
+
+
+|Model|Room|Corner|Angle|
+| :- | :- | :- | :- |
+||Prec|Recall|Prec|Recall|Prec|Recall|
+|**Heat (paper)**|0\.97|0\.94|0\.82|0\.83|0\.78|0\.79|
+|Heat (reproduction) rounded|0\.97|0\.97|0\.82|0\.83|0\.78|0\.79|
+|Heat (reproduction)|0\.9686691708|0\.9686691708|0\.817215959|0\.8322482128|0\.7755717631|0\.7898482399|
+Table 1: Quantitative original and reproduced results of the Heat model on the S3D floorplan dataset.
+
+
+# Transfer learning with RPLAN
+We aim to evaluate the capabilities of the HEAT model on a new floorplan dataset called RPLAN, which can be found [here](http://staff.ustc.edu.cn/~fuxm/projects/DeepLayout/index.html). Our goal is to use transfer learning with the pre-trained HEAT model to test its generalization performance on the new RPLAN dataset. Through this experiment, we hope to gain insights into the HEAT model's capabilities and its suitability for floorplan recognition and related tasks.
+
+## Data preparation
+In order to quantitatively test HEAT on the new RPLAN dataset, we have transformed the labels of the dataset to the format they use in the paper. The label format that the paper uses can be seen in label\_house. This is a dictionary of points, each with an array of points that it connects to. As we can see point 1 is connected to points 2 and 3. The result can be seen in the image below.
+
+label\_house = {<img style="float: right;" src="Aspose.Words.ca8de057-0fa3-499c-98c6-bd38cf78abb8.001.png">
+
+`    `(127, 20): [(20, 120), (234, 120)],
+
+`    `(20, 120): [(127, 20), (234, 120), (20, 240)],
+
+`    `(234, 120): [(127, 20), (20, 120), (234, 240)],
+
+`    `(20, 240): [(20, 120), (234, 240)],
+
+`    `(234, 240): [(234, 120), (20, 240)],
+
+}
+
+
+The dataset RPLAN has a list of polygons, each with its respective coordinates (= corners). So what we need to do is loop over all the polygons and map the polygons in the image to a list of coordinates. For each coordinate, we create a dictionary and add the coordinates of the current polygon to the dictionary that either have the same x or y value just as in the label\_house. Notice that since we loop over multiple polygons these coordinates will now have the connected corners from all shapes in the image. In the pseudocode below the process of transforming the data can be found. 
+```
+corners = {}
+
+for polygon in polygons:
+
+    coordinates = map\_coordinates(polygon)
+     for x1, y1 in coordinates:
+        if (x1, y1) is not in corners:
+
+            **init dictionary**
+
+        for x2, y2 in coordinates
+            if (x1, y1) == (x2, y2): **skip**
+            if x1 == x2 or y1 == y2: **add to list**
+```
+The RPLAN dataset we use consists of 45252 images, this is already filtered since some images are not applicable to our situation. Due to performance considerations, we split this dataset in half which results in a total set of 22626 images for training. This is 7.64 times larger than the Floorplan dataset which consists of 2960 images. This is not problematic as we set the weight decay to a small number and only run for 30 epochs. Furthermore, we use a validation set of 1404 samples and test on 1770 samples.
+
+A floorplan in RPLAN is fairly different from a floorplan in the S3D dataset on which the original HEAT model was trained. An RPLAN floorplan is a single image, whereas in S3D every floorplan is represented by two images: a normal and a density. Furthermore, the colors of the floorplans are very different. Therefore, to give HEAT a fair chance without additional training, we adapted the RPLAN data to look similar to the S3D data. Figure 1 shows how we converted an RPLAN sample into a density and normal with similar pixel values as the S3D dataset.
+
+Note, in figure 1, how the walls are different between the two datasets. RPLAN only defines its inside walls and its outside walls are simply the image’s circumference. S3D, on the other hand, makes no distinction between inside and outside walls: they are all assigned approximately the same color.
+
+![](Aspose.Words.ca8de057-0fa3-499c-98c6-bd38cf78abb8.002.png)
+
+**Figure 1: A normal and density pair from the S3D dataset (left) next to the construction of an S3D-like normal and density pair (middle) from an RPLAN floorplan (right).**
+
+Another important difference between the datasets is the way of annotation. In S3D the walls are annotated by a single edge, whereas in RPLAN every wall has an edge on both sides with the width of the wall as a margin. See figure 2 for a visualization of this. HEAT was trained using the annotations by S3D, hence without fine-tuning it will probably split rooms using a single edge. The output could then still be the right geometry, but when computing the error with RPLAN’s ground truth it will likely be penalized for this. This issue will be addressed in more detail in the qualitative results section.
+
+![](Aspose.Words.ca8de057-0fa3-499c-98c6-bd38cf78abb8.003.png)
+
+**Figure 2: Two different ground truths (for different floorplans) by S3D (left) and RPLAN (right).**
+
+
+
+## Quantitative results
+
+In order to further examine the Heat model's performance, we fine-tuned the existing model using RPLAN's training data. Specifically, we utilized the existing checkpoint of 300 epochs trained on the Heat model on the S3D floorplan and continued training it for 30 epochs on a training dataset  of RPLAN consisting of 22,626 images. We’ve kept the same weight decay during training. The results of both the original and fine-tuned models were then tested on a separate set of 1,770 images, with the outcomes presented in Table 1. As demonstrated, the fine-tuned model outperforms the original model on all metrics when tested on RPLAN.
+
+
+|Model|**Corners**| |
+| :- | :-: |:-: |
+||*Precision*|*recall*|*f\_score*|
+|Heat|0\.791|0\.43|0\.557|
+|Heat Fine-tuned|0\.999|0\.657|0\.792|
+|Model|**Edges**|
+||*Precision*|*recall*|*f\_score*|
+|Heat|0\.319|0\.157|0\.21|
+|Heat Fine-tuned|0\.665|0\.369|0\.475|
+|Model|**Regions**|
+||*Precision*|*recall*|*f\_score*|
+|Heat|0\.55|0\.432|0\.484|
+|Heat Fine-tuned|0\.95|0\.652|0\.773|
+|Model|**Average precision**|
+||*Precision*|*recall*||
+|Heat|0\.489|0\.308||
+|Heat Fine-tuned|0\.998|0\.663||
+**Table 2 Results of Heat model and fine tuned model on RPLAN dataset**
+
+Upon analyzing the results, it is apparent that the model has significant potential for improvement. The fine-tuned model displays notably superior precision results; however, its recall scores are still quite low. This is in contrast to the original S3D floorplan dataset, in which the Heat model achieved recall percentages in the 90% range. Therefore, we conclude that while the fine-tuned model makes accurate border predictions, it still misses numerous borders in its predictions. Limitations to these results in recall could be due to a number of different reasons to which due to time constraints we won’t go in depth. A number of reasons for the low recall could be due to the low epoch number for fine-tuning, different data distribution and a bigger data set. 
+
+
+## Qualitative results
+
+Besides the bold numbers, we are also interested in qualitative results as these could give us a better understanding of HEAT’s behavior. We picked several floorplans which showed interesting results. These are displayed in figure 3.
+
+The floorplan at the top of figure 3 is an example where the fine-tuned HEAT performs better than the original one. Even though the original HEAT correctly identifies the majority of the rooms, it still misses the large one in the middle. After fine-tuning it is able to predict the geometry perfectly. Also note how the fine-tuned model has margins between the rooms. These correspond to the different ground truth annotations of the S3D and RPLAN datasets, mentioned before in the data preprocessing section. Apparently, fine-tuning helped HEAT to ‘understand’ this difference in annotations.
+
+The outputs of the second floorplan in figure 3 are nice visualizations of the difference in flexibility between the two models. The original model was trained on floorplans in which edges were less sharply defined; the bottom left image in figure 1 shows how the red color saturates towards the edges. The fine-tuned model, however, was trained on floorplans in which edges were very sharp. On the second floorplan (figure 3), the original HEAT tends to fit the walls slightly outside of the red surface, whereas after fine-tuning it strictly stays inside the residence and eagerly predicts (too) many edges.
+
+The third floorplan in figure 3 shows an instance where performance of the original and fine-tuned HEAT is more or less equal. Note again how the model learned the different annotations in RPLAN during fine-tuning; there are margins between the rooms.
+
+Both versions of HEAT perform poorly on the instance at the bottom of figure 3. Especially the outside walls are not recognized. As discussed in the data preprocessing section, the outside walls in the S3D dataset are explicitly colored, whereas in RPLAN they are defined by the circumference of the image. The original model fails to predict most of the outside walls correctly. Fine-tuning clearly helped, but outside-wall-recognition is still not perfect. More training data could possibly resolve this problem.
+
+
+|**Ground Truth**|**Original HEAT**|**Fine-tuned HEAT**|
+| :-: | :-: | :-: |
+
+![](Aspose.Words.ca8de057-0fa3-499c-98c6-bd38cf78abb8.004.png)
+
+![](Aspose.Words.ca8de057-0fa3-499c-98c6-bd38cf78abb8.005.png)
+
+![](Aspose.Words.ca8de057-0fa3-499c-98c6-bd38cf78abb8.006.png)
+
+![](Aspose.Words.ca8de057-0fa3-499c-98c6-bd38cf78abb8.007.png)
+
+**Figure 3: The qualitative results where the left images are the ground truths, the outputs of the original HEAT are in the middle and the right images display the outputs of the fine-tuned HEAT.**
+
+# Discussion 
+# Conclusion
+
+# References
+Heat Paper:
+```	
+@InProceedings{Chen_2022_CVPR,
+    author    = {Chen, Jiacheng and Qian, Yiming and Furukawa, Yasutaka},
+    title     = {HEAT: Holistic Edge Attention Transformer for Structured Reconstruction},
+    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+    month     = {June},
+    year      = {2022},
+    pages     = {3866-3875}
+}
+```	
+Dataset RPLAN:
+```
+@article {Wu_DeepLayout_2019,
+title = {Data-driven Interior Plan Generation for Residential Buildings},
+author = {Wenming Wu and Xiao-Ming Fu and Rui Tang and Yuhan Wang and Yu-Hao Qi and Ligang Liu},
+journal = {ACM Transactions on Graphics (SIGGRAPH Asia)},
+volume = {38},
+number = {6},
+year = {2019},
+}
+```
