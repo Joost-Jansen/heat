@@ -52,7 +52,7 @@ Move to your preferred project folder where you want to install HEAT by using cd
 my_heat_project
   |____ Deformable\_DETR  # Folder for DETR dependency
   |____ heat              # Your heat project from github
-    |____ data           	# Put your data here   
+    |____ data            # Put your data here   
     |____ checkpoints     # Put predefined checkpoints here
 
 ```
@@ -101,7 +101,7 @@ After HEAT is installed we can verify that everything works by opening Python in
 python
 >>> import heat
 ```
-This should not return any error, indicating that HEAT is successfully installed! We also have 
+This should not return any error, indicating that HEAT is successfully installed!
 
 
 
