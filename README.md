@@ -154,9 +154,9 @@ for polygon in polygons:
             if (x1, y1) == (x2, y2): **skip**
             if x1 == x2 or y1 == y2: **add to list**
 ```
-The code with examples can be found in the [data_preparation](https://github.com/Joost-Jansen/heat/tree/master/data_preparation) folder. We have added 5 examples from the dataset. In the dataset folder contains the original RPLAN images, the geometry folder contains the geometry data (labels) from this dataset, the labels folder contains the rewritten data (.npy) files, and the vis folder contains 2 versions of images generated from the label. 
+The code with examples can be found in the [data_preparation](https://github.com/Joost-Jansen/heat/tree/master/data_preparation) folder. We have added 5 examples from the dataset. In the dataset folder contains the original RPLAN images, the geometry folder contains the geometry data (labels) from this dataset, the labels folder contains the rewritten data (.npy) files, and the vis folder contains 2 versions of images generated from the label. Below the input image, the visualiation of the label created, and how this label relates to the visualisation in the paper can be found. 
 
-Input image.               | Image generated           | Relates to image in paper 
+Input image                | Labels generated          | Relation to HEAT paper
 :-------------------------:|:-------------------------:|:-------------------------:
 <img src="https://raw.githubusercontent.com/Joost-Jansen/heat/master/data_preparation/dataset/10.png" width="200" height="200"> | <img src="https://raw.githubusercontent.com/Joost-Jansen/heat/master/data_preparation/vis/10_plotted.png" width="200" height="200"> | <img src="https://raw.githubusercontent.com/Joost-Jansen/heat/master/data_preparation/vis/10.png" width="200" height="200">
 
