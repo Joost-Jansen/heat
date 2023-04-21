@@ -1,6 +1,6 @@
-﻿**HEAT: Holistic Edge Attention Transformer for Structured Reconstruction**
-
-**Student credentials**
+﻿
+# Reproduction of HEAT: Holistic Edge Attention Transformer for Structured Reconstruction
+## Student credentials
 
 Jeroen Hofland, 4678141, <j.l.hofland@student.tudelft.nl>
 
@@ -9,7 +9,7 @@ Jochem van Lith, ???, ???
 Joost Jansen, 4807179, [j.j.jansen-2@student.tudelft.nl](mailto:j.j.jansen-1@student.tudelft.nl)
 
 
-# HEAT: Holistic Edge Attention Transformer for Structured Reconstruction
+# Introduction
 
 In recent years, attention-based neural nets (NN) have shown success in a broad range of computer vision tasks. One of the methods that try to solve a specific problem in the field of structured reconstruction is Holistic Edge Attention Transformer (HEAT). The method aims to reconstruct  structures found in 2D rastered images (eg. floorplans) and does this by constructing a planar graph that represents the underlying geometric structure of the input image. In this blog post, we aim to explain and evaluate HEAT by Chen, Qian, and Furukawa. We will do this by replicating the experiments on two validation sets as mentioned in the paper. Additionally, we will use the model obtained by the paper and add training data from a new data source to further assess the performance of the method and compare it to the results found. By doing so we aim to critically analyze the ability to reproduce the results of the paper and report on the generalizability to new datasets. 
 
@@ -59,14 +59,10 @@ conda install pytorch==1.13.1 torchvision==0.14.1 torchaudio==0.13.1 pytorch-cud
 (Optional) We can now test if CUDA was correctly installed by running. This will return 11.7 and true if everything is configured correctly.
 ```
 python
-
-\>>> import torch
-
-\>>> print(torch.version.cuda)
-
-\>>> torch.cuda.is\_available()
-
-\>>> quit()
+>>> import torch
+>>> print(torch.version.cuda)
+>>> torch.cuda.is\_available()
+>>> quit()
 ```
 
 **Step 6:** Install requirements for Deformable-DETR
@@ -74,11 +70,8 @@ python
 We will now install the requirements for Deformable-DETR using the following commands. 
 ```
 pip install pycocotools
-
 pip install tqdm
-
 pip install cython
-
 pip install scipy
 ```
 Perform an extra step to install the Deformable attention module by changing the directory (cd) to "Deformable-DETR/models/ops" and running the following commands. After the setup was completed head back to the root folder of your project. 
@@ -100,8 +93,7 @@ pip install heat/models/ops
 After HEAT is installed we can verify that everything works by opening Python in the Conda terminal and running the following command:
 ```
 python
-
-\>>> import heat
+>>> import heat
 ```
 This should not return any error, indicating that HEAT is successfully installed! We also have 
 
@@ -127,7 +119,7 @@ We aim to evaluate the capabilities of the HEAT model on a new floorplan dataset
 ## Data preparation
 In order to quantitatively test HEAT on the new RPLAN dataset, we have transformed the labels of the dataset to the format they use in the paper. The label format that the paper uses can be seen in label\_house. This is a dictionary of points, each with an array of points that it connects to. As we can see point 1 is connected to points 2 and 3. The result can be seen in the image below.
 
-label\_house = {<img style="float: right;" src="Aspose.Words.ca8de057-0fa3-499c-98c6-bd38cf78abb8.001.png">
+label\_house = {<img style="float: right;" src="images_readme/house.png">
 
 `    `(127, 20): [(20, 120), (234, 120)],
 
@@ -164,13 +156,13 @@ A floorplan in RPLAN is fairly different from a floorplan in the S3D dataset on 
 
 Note, in figure 1, how the walls are different between the two datasets. RPLAN only defines its inside walls and its outside walls are simply the image’s circumference. S3D, on the other hand, makes no distinction between inside and outside walls: they are all assigned approximately the same color.
 
-![](Aspose.Words.ca8de057-0fa3-499c-98c6-bd38cf78abb8.002.png)
+![](images_readme/image_rewriting.png)
 
 **Figure 1: A normal and density pair from the S3D dataset (left) next to the construction of an S3D-like normal and density pair (middle) from an RPLAN floorplan (right).**
 
 Another important difference between the datasets is the way of annotation. In S3D the walls are annotated by a single edge, whereas in RPLAN every wall has an edge on both sides with the width of the wall as a margin. See figure 2 for a visualization of this. HEAT was trained using the annotations by S3D, hence without fine-tuning it will probably split rooms using a single edge. The output could then still be the right geometry, but when computing the error with RPLAN’s ground truth it will likely be penalized for this. This issue will be addressed in more detail in the qualitative results section.
 
-![](Aspose.Words.ca8de057-0fa3-499c-98c6-bd38cf78abb8.003.png)
+![](images_readme/different_ground_truths.png)
 
 **Figure 2: Two different ground truths (for different floorplans) by S3D (left) and RPLAN (right).**
 
@@ -219,13 +211,13 @@ Both versions of HEAT perform poorly on the instance at the bottom of figure 3. 
 |**Ground Truth**|**Original HEAT**|**Fine-tuned HEAT**|
 | :-: | :-: | :-: |
 
-![](Aspose.Words.ca8de057-0fa3-499c-98c6-bd38cf78abb8.004.png)
+![](images_readme/qualitative_results1.png)
 
-![](Aspose.Words.ca8de057-0fa3-499c-98c6-bd38cf78abb8.005.png)
+![](images_readme/qualitative_results2.png)
 
-![](Aspose.Words.ca8de057-0fa3-499c-98c6-bd38cf78abb8.006.png)
+![](images_readme/qualitative_results3.png)
 
-![](Aspose.Words.ca8de057-0fa3-499c-98c6-bd38cf78abb8.007.png)
+![](images_readme/qualitative_results4.png)
 
 **Figure 3: The qualitative results where the left images are the ground truths, the outputs of the original HEAT are in the middle and the right images display the outputs of the fine-tuned HEAT.**
 
