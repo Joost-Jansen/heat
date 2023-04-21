@@ -124,7 +124,7 @@ Table 1: Quantitative original and reproduced results of the Heat model on the S
 We aim to evaluate the capabilities of the HEAT model on a new floorplan dataset called RPLAN, which can be found [here](http://staff.ustc.edu.cn/~fuxm/projects/DeepLayout/index.html). Our goal is to use transfer learning with the pre-trained HEAT model to test its generalization performance on the new RPLAN dataset. Through this experiment, we hope to gain insights into the HEAT model's capabilities and its suitability for floorplan recognition and related tasks.
 
 ## Data preparation
-In order to quantitatively test HEAT on the new RPLAN dataset, we have transformed the labels of the dataset to the format they use in the paper. The label format that the paper uses can be seen in label\_house. This is a dictionary of points, each with an array of points that it connects to. As we can see point 1 is connected to points 2 and 3. The result can be seen in the image below.
+In order to quantitatively test HEAT on the new RPLAN dataset, we have transformed the labels of the dataset to the format they use in the paper. The label format that the paper uses can be seen in label\_house. This is a dictionary of points, each with an array of points that it connects to. As we can see point 1 is connected to points 2 and 3. The result can be seen in the image below. 
 
 <img src="images_readme/house.png">
 
@@ -154,6 +154,13 @@ for polygon in polygons:
             if (x1, y1) == (x2, y2): **skip**
             if x1 == x2 or y1 == y2: **add to list**
 ```
+The code with examples can be found in the [data_preparation](https://github.com/Joost-Jansen/heat/tree/master/data_preparation) folder. We have added 5 examples from the dataset. In the dataset folder contains the original RPLAN images, the geometry folder contains the geometry data (labels) from this dataset, the labels folder contains the rewritten data (.npy) files, and the vis folder contains 2 versions of images generated from the label. 
+
+Input image.               | Image generated           | Relates to image in paper 
+:-------------------------:|:-------------------------:|:-------------------------:
+<img src="https://raw.githubusercontent.com/Joost-Jansen/heat/master/data_preparation/dataset/10.png" width="200" height="200"> | <img src="https://raw.githubusercontent.com/Joost-Jansen/heat/master/data_preparation/vis/10_plotted.png" width="200" height="200"> | <img src="https://raw.githubusercontent.com/Joost-Jansen/heat/master/data_preparation/vis/10.png" width="200" height="200">
+
+
 The RPLAN dataset we use consists of 45252 images, this is already filtered since some images are not applicable to our situation. Due to performance considerations, we split this dataset in half which results in a total set of 22626 images for training. This is 7.64 times larger than the Floorplan dataset which consists of 2960 images. This is not problematic as we set the weight decay to a small number and only run for 30 epochs. Furthermore, we use a validation set of 1404 samples and test on 1770 samples.
 
 A floorplan in RPLAN is fairly different from a floorplan in the S3D dataset on which the original HEAT model was trained. An RPLAN floorplan is a single image, whereas in S3D every floorplan is represented by two images: a normal and a density. Furthermore, the colors of the floorplans are very different. Therefore, to give HEAT a fair chance without additional training, we adapted the RPLAN data to look similar to the S3D data. Figure 1 shows how we converted an RPLAN sample into a density and normal with similar pixel values as the S3D dataset.
